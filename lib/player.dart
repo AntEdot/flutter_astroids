@@ -173,8 +173,7 @@ class Mine extends PositionComponent with HasGameReference<SpaceShooterGame> {
     await super.onLoad();
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
       removeFromParent();
-      game.add(BombExploded(position: position, size: Vector2(300, 300)));
-      game.add(BombExploded(position: position, size: Vector2(500, 500)));
+      game.add(BombExploded(position: position, size: Vector2(100, 100)));
     });
   }
 
@@ -196,11 +195,21 @@ class BombExploded extends PositionComponent with HasGameReference<SpaceShooterG
   Future<void> onLoad() async {
     await super.onLoad();
     add(CircleHitbox(collisionType: CollisionType.passive));
-    Future.delayed(const Duration(milliseconds: 120)).then((value) => removeFromParent());
+    Future.delayed(const Duration(milliseconds: 400)).then((value) => removeFromParent());
   }
 
   @override
   void render(Canvas canvas) {
     canvas.drawCircle(Offset(size.x / 2, size.y / 2), size.x / 2, _paint);
+  }
+
+  double delta = 20;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    delta -= delta * delta * dt;
+    delta = delta.clamp(0, 100);
+    size += Vector2(delta, delta);
   }
 }

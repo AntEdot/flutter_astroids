@@ -16,6 +16,12 @@ class SpaceShooterGame extends FlameGame with HasKeyboardHandlerComponents, HasC
   int score = 0;
   int health = 3;
   int difficulty = 1;
+  int attackSpeed = 5;
+
+  changeAttackSpeed(as) {
+    attackSpeed = as;
+    bulletSpawner.period = 1 / attackSpeed;
+  }
 
   @override
   Future<void> onLoad() async {
@@ -25,7 +31,7 @@ class SpaceShooterGame extends FlameGame with HasKeyboardHandlerComponents, HasC
     add(player);
 
     bulletSpawner = SpawnComponent(
-      period: .2,
+      period: 1 / attackSpeed,
       selfPositioning: true,
       factory: (index) {
         score--;

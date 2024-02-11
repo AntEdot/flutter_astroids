@@ -77,7 +77,7 @@ class Enemy extends SpriteGroupComponent<EnemyAstroidSprites>
         current = EnemyAstroidSprites.values[(current?.index ?? 0) + 1];
       }
 
-      other.removeFromParent();
+      if (other is Bullet) other.removeFromParent();
       game.add(ScoreNumber(value: 5, position: position));
     }
 
