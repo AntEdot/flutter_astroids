@@ -12,7 +12,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  windowManager.setAspectRatio((1600 - 40) / 900);
+  bool isFullScreen = await windowManager.isFullScreen();
+  windowManager.setAspectRatio((isFullScreen ? 1600 : (1600 - 40)) / 900);
+
   windowManager.setMinimumSize(const Size(1600, 900));
 
   runApp(const MainWidget());
@@ -151,7 +153,9 @@ class _MainWidgetState extends State<MainWidget> with WindowListener {
                                     children: [
                                       TextButton(
                                         onPressed: () async {
-                                          windowManager.setFullScreen(!(await windowManager.isFullScreen()));
+                                          bool isFullScreen = await windowManager.isFullScreen();
+                                          windowManager.setAspectRatio((isFullScreen ? 1600 : (1600 - 40)) / 900);
+                                          windowManager.setFullScreen(!isFullScreen);
                                         },
                                         child: const Text('Fullscreen'),
                                       ),
