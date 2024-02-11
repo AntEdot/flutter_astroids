@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   flame: ^1.14.0
   flame_svg: ^1.8.9
+  window_manager: ^0.3.8
 
 dev_dependencies:
   flutter_test:
