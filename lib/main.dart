@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -111,6 +112,10 @@ class _MainWidgetState extends State<MainWidget> with WindowListener {
                                     TextButton(
                                       onPressed: restart,
                                       child: const Text('Restart'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => exit(0),
+                                      child: const Text('Exit'),
                                     ),
                                   ],
                                 ),

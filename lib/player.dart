@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:math' as math;
 
 import 'package:flame/collisions.dart';
@@ -14,7 +15,7 @@ enum PlayerState {
 
 class Player extends SpriteGroupComponent<PlayerState> with KeyboardHandler, HasGameRef<SpaceShooterGame> {
   final acceleration = 500.0;
-  final frictionFactor = Vector2(0.999, 0.999);
+  var frictionFactor = Vector2(0.999, 0.999);
   final maxVelocity = Vector2(500, 500);
   final int turningSpeed = 200;
 
@@ -43,16 +44,49 @@ class Player extends SpriteGroupComponent<PlayerState> with KeyboardHandler, Has
     return position + v;
   }
 
-  startShoot() {
-    if (!game.bulletSpawner.timer.isRunning()) {
-      game.add(Bullet(position: getBulletSpawnPos(), playerAngle: angle));
-      game.bulletSpawner.timer.start();
-      game.score--;
+  bool isShooting = false;
+
+  shoot() {
+    game.add(Bullet(position: getBulletSpawnPos(), angle: angle - math.pi, speed: game.bulletSpeed));
+    game.score--;
+  }
+
+  bool shotgunLoading = false;
+
+  _ss() {
+    for (var i = 0; i < game.bullets; i++) {
+      game.add(Bullet(
+          position: getBulletSpawnPos(),
+          angle: angle - math.pi - (((i + 1) ~/ 2) * (game.bulletSpeed / 360) / (2 * math.pi) * (i % 2 == 0 ? 1 : -1)),
+          speed: game.bulletSpeed));
     }
   }
 
-  stopShoot() {
-    game.bulletSpawner.timer.stop();
+  shotgunShot() {
+    if (shotgunLoading) return;
+    shotgunLoading = true;
+
+    for (var i = 0; i < game.bullets; i++) {
+      game.add(Bullet(
+          position: getBulletSpawnPos(),
+          angle: angle -
+              math.pi -
+              (((i + 1) ~/ 2) *
+                  (game.bulletSpeed / 360) /
+                  (2 * math.pi) *
+                  (i % 2 == 0 ? 1 : -1) *
+                  (math.Random().nextDouble() - 0.5)),
+          speed: game.bulletSpeed));
+    }
+
+    velocity -= Vector2(math.cos(angle - math.pi), math.sin(angle - math.pi))
+      ..scale(2000)
+      ..rotate(math.pi / 2);
+    frictionFactor = Vector2(0.8, 0.8);
+    game.score--;
+
+    Future.delayed(const Duration(milliseconds: 50), () => frictionFactor = Vector2(0.999, 0.999));
+    Future.delayed(const Duration(milliseconds: 1000), () => shotgunLoading = false);
   }
 
   bool turningRight = false, turningLeft = false;
@@ -63,11 +97,10 @@ class Player extends SpriteGroupComponent<PlayerState> with KeyboardHandler, Has
     turningRight =
         (keysPressed.contains(LogicalKeyboardKey.keyD) || keysPressed.contains(LogicalKeyboardKey.arrowRight));
 
-    if (keysPressed.contains(LogicalKeyboardKey.keyZ)) {
-      startShoot();
-    } else {
-      stopShoot();
+    if (!isShooting && keysPressed.contains(LogicalKeyboardKey.keyZ)) {
+      timeCounter += 1 / game.attackSpeed;
     }
+    isShooting = keysPressed.contains(LogicalKeyboardKey.keyZ);
 
     if (keysPressed.contains(LogicalKeyboardKey.keyX) || keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
       current = PlayerState.accelerating;
@@ -76,15 +109,25 @@ class Player extends SpriteGroupComponent<PlayerState> with KeyboardHandler, Has
     }
 
     if (keysPressed.contains(LogicalKeyboardKey.space)) {
-      game.add(Mine(position: position));
-      game.add(ScoreNumber(value: -10, position: position));
+      shotgunShot();
+      //game.add(Mine(position: position));
+      //game.add(ScoreNumber(value: -10, position: position));
     }
 
     return true;
   }
 
+  double timeCounter = 0;
+
   @override
   void update(double dt) {
+    timeCounter += dt;
+
+    if (timeCounter > 1 / game.attackSpeed) {
+      timeCounter -= 1 / game.attackSpeed;
+      if (isShooting) shoot();
+    }
+
     if (turningLeft) {
       angle -= turningSpeed * dt / 180.0 * math.pi;
     }
@@ -126,10 +169,13 @@ class Player extends SpriteGroupComponent<PlayerState> with KeyboardHandler, Has
 class Bullet extends SpriteComponent with HasGameReference<SpaceShooterGame> {
   Bullet({
     super.position,
-    required this.playerAngle,
+    required this.speed,
+    required this.angle,
   }) : super(size: Vector2(7, 7), anchor: Anchor.center);
 
-  final double playerAngle;
+  final double angle;
+  final double speed;
+
   late Vector2 v;
 
   @override
@@ -144,9 +190,9 @@ class Bullet extends SpriteComponent with HasGameReference<SpaceShooterGame> {
       ),
     );
 
-    v = Vector2(math.cos(playerAngle - math.pi), math.sin(playerAngle - math.pi))
+    v = Vector2(math.cos(angle), math.sin(angle))
       ..rotate(math.pi / 2)
-      ..scale(500);
+      ..scale(game.bulletSpeed);
   }
 
   @override

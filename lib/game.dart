@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:math' as math;
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/experimental.dart';
@@ -16,11 +16,16 @@ class SpaceShooterGame extends FlameGame with HasKeyboardHandlerComponents, HasC
   int score = 0;
   int health = 3;
   int difficulty = 1;
+
   int attackSpeed = 5;
+
+  int bullets = 10;
+  double bulletSpeed = 500;
+  double bulletSpread = 5;
 
   changeAttackSpeed(as) {
     attackSpeed = as;
-    bulletSpawner.period = 1 / attackSpeed;
+    //bulletSpawner.period = 1 / attackSpeed;
   }
 
   @override
@@ -29,21 +34,6 @@ class SpaceShooterGame extends FlameGame with HasKeyboardHandlerComponents, HasC
 
     player = Player();
     add(player);
-
-    bulletSpawner = SpawnComponent(
-      period: 1 / attackSpeed,
-      selfPositioning: true,
-      factory: (index) {
-        score--;
-        return Bullet(
-          position: player.getBulletSpawnPos(),
-          playerAngle: player.angle,
-        );
-      },
-      autoStart: false,
-    );
-
-    add(bulletSpawner);
 
     add(
       SpawnComponent(
